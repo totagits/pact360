@@ -106,7 +106,9 @@ export const MainLayout: React.FC<{ children: React.ReactNode }> = ({ children }
         {/* Sidebar Header */}
         <div className="px-6 py-5 border-b border-slate-800/80 flex items-center justify-between">
           <Link to="/dashboard" className="flex items-center gap-3">
-            <img src={settings?.logoUrl || '/logo.png'} alt="Branding Logo" className="h-8 w-auto bg-white/10 p-0.5 rounded" />
+            <div className="bg-white p-1 rounded-lg shadow-sm flex items-center justify-center">
+              <img src={settings?.logoUrl || '/logo.png'} alt="Branding Logo" className="h-7 w-auto" />
+            </div>
             <span className="text-xl font-bold tracking-tight text-white">
               {settings?.systemName || 'PACT360'}
             </span>
@@ -279,7 +281,9 @@ export const MainLayout: React.FC<{ children: React.ReactNode }> = ({ children }
               <X className="w-6 h-6" />
             </button>
             <div className="flex items-center gap-3 mb-8">
-              <img src={settings?.logoUrl || '/logo.png'} alt="Branding Logo" className="h-8 w-auto" />
+              <div className="bg-white p-1 rounded-lg shadow-sm flex items-center justify-center">
+                <img src={settings?.logoUrl || '/logo.png'} alt="Branding Logo" className="h-7 w-auto" />
+              </div>
               <span className="text-lg font-bold text-white">{settings?.systemName || 'PACT360'}</span>
             </div>
             <nav className="flex-1 space-y-1">

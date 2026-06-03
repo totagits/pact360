@@ -22,12 +22,40 @@ const carouselImages = [
 
 export const LandingPage: React.FC = () => {
   const [activeSlide, setActiveSlide] = useState(0);
+  const [settings, setSettings] = useState<any>(null);
 
   useEffect(() => {
     const timer = setInterval(() => {
       setActiveSlide((prev) => (prev + 1) % carouselImages.length);
     }, 4500);
     return () => clearInterval(timer);
+  }, []);
+
+  useEffect(() => {
+    fetch('/api/system/settings')
+      .then((res) => {
+        if (!res.ok) throw new Error('Not OK');
+        return res.json();
+      })
+      .then((data) => {
+        setSettings(data);
+        if (data.themeColor) {
+          const styleId = 'dynamic-brand-styles';
+          let styleEl = document.getElementById(styleId);
+          if (!styleEl) {
+            styleEl = document.createElement('style');
+            styleEl.id = styleId;
+            document.head.appendChild(styleEl);
+          }
+          styleEl.innerHTML = `
+            .bg-brand-500 { background-color: ${data.themeColor} !important; }
+            .text-brand-700 { color: ${data.themeColor}e0 !important; }
+            .text-brand-800 { color: ${data.themeColor} !important; }
+            .text-brand-500 { color: ${data.themeColor} !important; }
+          `;
+        }
+      })
+      .catch((err) => console.warn('Using fallback local tailwind configurations:', err));
   }, []);
 
   const nextSlide = () => {
@@ -41,15 +69,19 @@ export const LandingPage: React.FC = () => {
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col font-sans">
       {/* Header */}
-      <header className="bg-white border-b border-slate-200 sticky top-0 z-50 px-6 py-4 flex items-center justify-between">
+      <header className="bg-brand-500 border-b border-black/10 sticky top-0 z-50 px-6 py-4 flex items-center justify-between text-white">
         <div className="flex items-center gap-3">
-          <img src="/logo.png" alt="Plan International Logo" className="h-10 w-auto" />
-          <div className="h-6 w-[1px] bg-slate-300"></div>
-          <span className="text-xl font-bold tracking-tight text-brand-800">PACT<span className="text-brand-500">360</span></span>
+          <div className="bg-white px-2.5 py-1.5 rounded-lg shadow-sm flex items-center justify-center">
+            <img src={settings?.logoUrl || "/logo.png"} alt="Plan International Logo" className="h-7 w-auto" />
+          </div>
+          <div className="h-6 w-[1px] bg-white/20"></div>
+          <span className="text-xl font-bold tracking-tight text-white">
+            {settings?.systemName || 'PACT360'}
+          </span>
         </div>
         <Link 
           to="/login" 
-          className="bg-brand-500 text-white px-5 py-2 rounded-lg font-medium hover:bg-brand-600 transition-colors shadow-sm"
+          className="bg-white text-brand-600 px-5 py-2 rounded-lg font-semibold hover:bg-white/90 transition-colors shadow-sm text-sm"
         >
           Sign In
         </Link>
