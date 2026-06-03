@@ -166,22 +166,22 @@ export const MainLayout: React.FC<{ children: React.ReactNode }> = ({ children }
       <div className="flex-1 flex flex-col overflow-hidden">
         
         {/* Top Navbar */}
-        <header className="bg-white border-b border-slate-200 h-16 flex items-center justify-between px-6 flex-shrink-0 z-40">
+        <header className="bg-brand-500 text-white border-b border-black/10 h-16 flex items-center justify-between px-6 flex-shrink-0 z-40">
           
           <div className="flex items-center gap-4">
             {/* Mobile Hamburger toggle */}
             <button 
               onClick={() => setMobileMenuOpen(true)}
-              className="lg:hidden text-slate-600 hover:text-slate-900 focus:outline-none"
+              className="lg:hidden text-white/80 hover:text-white focus:outline-none"
             >
               <Menu className="w-6 h-6" />
             </button>
 
             {/* Breadcrumb / Page Title */}
-            <div className="text-sm text-slate-400 font-medium hidden sm:flex items-center gap-2">
+            <div className="text-sm text-white/70 font-medium hidden sm:flex items-center gap-2">
               <span>{settings?.orgName || 'Plan International Liberia'}</span>
-              <span>/</span>
-              <span className="text-slate-800 font-bold capitalize">
+              <span className="text-white/40">/</span>
+              <span className="text-white font-bold capitalize">
                 {currentPath.split('/')[1] || 'Dashboard'}
               </span>
             </div>
@@ -193,11 +193,11 @@ export const MainLayout: React.FC<{ children: React.ReactNode }> = ({ children }
             <div className="relative">
               <button 
                 onClick={() => setShowNotifications(!showNotifications)}
-                className="w-10 h-10 rounded-full border border-slate-200 flex items-center justify-center text-slate-600 hover:bg-slate-50 transition-colors relative"
+                className="p-1.5 rounded-full hover:bg-white/10 text-white/90 hover:text-white relative"
               >
                 <Bell className="w-5 h-5" />
                 {unreadCount > 0 && (
-                  <span className="absolute top-1.5 right-1.5 bg-red-500 text-white text-[10px] font-bold w-4.5 h-4.5 rounded-full flex items-center justify-center border-2 border-white animate-pulse">
+                  <span className="absolute top-1.5 right-1.5 bg-red-500 text-white text-[10px] font-bold w-4.5 h-4.5 rounded-full flex items-center justify-center border-2 border-brand-500 animate-pulse">
                     {unreadCount}
                   </span>
                 )}
@@ -205,7 +205,7 @@ export const MainLayout: React.FC<{ children: React.ReactNode }> = ({ children }
 
               {/* Notification Dropdown Drawer */}
               {showNotifications && (
-                <div className="absolute right-0 mt-2 w-80 bg-white border border-slate-200 rounded-xl shadow-xl z-50 animate-fade-in overflow-hidden">
+                <div className="absolute right-0 mt-2 w-80 bg-white border border-slate-200 rounded-xl shadow-xl z-50 animate-fade-in overflow-hidden text-slate-800">
                   <div className="px-4 py-3 bg-slate-50 border-b border-slate-200 flex justify-between items-center">
                     <span className="font-bold text-slate-800 text-sm">System Alerts</span>
                     <span className="text-xs bg-brand-50 text-brand-600 px-2 py-0.5 rounded-full font-semibold">{unreadCount} New</span>
@@ -244,14 +244,14 @@ export const MainLayout: React.FC<{ children: React.ReactNode }> = ({ children }
             {/* User details summary */}
             <div 
               onClick={() => navigate('/profile')} 
-              className="flex items-center gap-2 cursor-pointer border-l border-slate-200 pl-4 py-1"
+              className="flex items-center gap-2 cursor-pointer border-l border-white/20 pl-4 py-1"
             >
-              <div className="w-8 h-8 rounded-full bg-slate-100 text-slate-600 flex items-center justify-center font-semibold text-sm">
+              <div className="w-8 h-8 rounded-full bg-white/10 text-white flex items-center justify-center font-semibold text-sm border border-white/10 hover:bg-white/20 transition-colors">
                 {user?.firstName.charAt(0)}{user?.lastName.charAt(0)}
               </div>
               <div className="text-left hidden md:block">
-                <div className="text-xs font-bold text-slate-800 leading-none">{user?.firstName} {user?.lastName}</div>
-                <div className="text-[10px] text-slate-400 font-medium mt-0.5">{user?.role}</div>
+                <div className="text-xs font-bold text-white leading-none">{user?.firstName} {user?.lastName}</div>
+                <div className="text-[10px] text-white/70 font-medium mt-0.5">{user?.role}</div>
               </div>
             </div>
 
