@@ -8,6 +8,8 @@ RUN npm run build
 
 # Build Stage for Backend Server
 FROM node:24-alpine AS server-builder
+# Install openssl and compatibility libraries for Prisma engine
+RUN apk add --no-cache openssl libc6-compat
 WORKDIR /app/server
 COPY server/package*.json ./
 RUN npm install
@@ -20,6 +22,8 @@ RUN npx prisma db push --accept-data-loss && node dist/prisma/seed.js
 
 # Production Environment
 FROM node:24-alpine
+# Install openssl and compatibility libraries for Prisma engine
+RUN apk add --no-cache openssl libc6-compat
 WORKDIR /app
 
 # Copy built code and configuration
