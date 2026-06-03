@@ -1,0 +1,21 @@
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "5000:5000"
+    environment:
+      - NODE_ENV=production
+      - PORT=5000
+      - JWT_SECRET=super_secret_pact360_access_token_key_12345
+      - JWT_REFRESH_SECRET=super_secret_pact360_refresh_token_key_54321
+      - DATABASE_URL=file:./dev.db
+    volumes:
+      - pact360_db:/app/server/prisma
+    restart: always
+
+volumes:
+  pact360_db:

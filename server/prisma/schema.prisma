@@ -1,0 +1,434 @@
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+// 1. User & RBAC
+model User {
+  id                String       @id @default(uuid())
+  email             String       @unique
+  passwordHash      String
+  firstName         String
+  lastName          String
+  status            String       // "Active", "Inactive", "Suspended"
+  lastLogin         DateTime?
+  createdAt         DateTime     @default(now())
+  updatedAt         DateTime     @updatedAt
+
+  roleId            String
+  role              Role         @relation(fields: [roleId], references: [id])
+  officeId          String?
+  office            Office?      @relation(fields: [officeId], references: [id])
+  departmentId      String?
+  department        Department?  @relation(fields: [departmentId], references: [id])
+
+  // Relations to other entities
+  assignedAssets    Asset[]      @relation("Custodian")
+  managedProjects   Project[]    @relation("ProjectManager")
+  managedContracts  Contract[]   @relation("ContractManager")
+  
+  // Auditing
+  auditLogs         AuditLog[]
+  notifications     Notification[]
+}
+
+model Role {
+  id          String       @id @default(uuid())
+  name        String       @unique // "Super Admin", "Asset Manager", etc.
+  description String?
+  createdAt   DateTime     @default(now())
+  
+  users       User[]
+  permissions Permission[] @relation("RolePermissions")
+}
+
+model Permission {
+  id          String   @id @default(uuid())
+  name        String   @unique
+  code        String   @unique // e.g., "assets:read", "contracts:write"
+  description String?
+  
+  roles       Role[]   @relation("RolePermissions")
+}
+
+// 2. Organization Structure
+model Office {
+  id        String   @id @default(uuid())
+  name      String   @unique
+  code      String   @unique
+  type      String   // "Country Office", "Field Office", "Warehouse"
+  location  String
+  createdAt DateTime @default(now())
+
+  users     User[]
+  assets    Asset[]
+}
+
+model Department {
+  id        String   @id @default(uuid())
+  name      String   @unique
+  code      String   @unique
+  createdAt DateTime @default(now())
+
+  users     User[]
+  assets    Asset[]
+  contracts Contract[]
+}
+
+// 3. NGO Frameworks
+model Donor {
+  id        String   @id @default(uuid())
+  name      String   @unique
+  code      String   @unique
+  createdAt DateTime @default(now())
+
+  grants    Grant[]
+  assets    Asset[]
+  contracts Contract[]
+}
+
+model Grant {
+  id                     String    @id @default(uuid())
+  name                   String    @unique
+  code                   String    @unique
+  amount                 Float
+  currency               String    @default("USD")
+  startDate              DateTime
+  endDate                DateTime
+  complianceRequirements String?
+  status                 String    // "Active", "Closed", "Pending"
+  createdAt              DateTime  @default(now())
+
+  donorId                String
+  donor                  Donor     @relation(fields: [donorId], references: [id])
+  
+  projects               Project[]
+  assets                 Asset[]
+  contracts              Contract[]
+}
+
+model Project {
+  id          String   @id @default(uuid())
+  name        String   @unique
+  code        String   @unique
+  budget      Float
+  startDate   DateTime
+  endDate     DateTime
+  status      String   // "Active", "Completed", "Pending", "Suspended"
+  createdAt   DateTime @default(now())
+
+  grantId     String
+  grant       Grant    @relation(fields: [grantId], references: [id])
+  
+  managerId   String
+  manager     User     @relation("ProjectManager", fields: [managerId], references: [id])
+
+  assets      Asset[]
+  contracts   Contract[]
+}
+
+// 4. Vendors
+model Vendor {
+  id              String   @id @default(uuid())
+  name            String   @unique
+  contactName     String
+  email           String
+  phone           String
+  address         String
+  taxId           String
+  serviceCategory String
+  performanceScore Float    @default(5.0)
+  status          String   // "Active", "Blacklisted", "Inactive"
+  notes           String?
+  createdAt       DateTime @default(now())
+
+  assets          Asset[]
+  contracts       Contract[]
+  workOrders      MaintenanceWorkOrder[]
+}
+
+// 5. Assets & Lifecycle
+model AssetCategory {
+  id          String   @id @default(uuid())
+  name        String   @unique // "Vehicles", "Laptops", etc.
+  description String?
+  code        String   @unique
+  prefix      String   // e.g., "VEH", "LAP"
+  createdAt   DateTime @default(now())
+
+  assets      Asset[]
+}
+
+model Asset {
+  id                 String       @id @default(uuid())
+  assetCode          String       @unique // auto-generated
+  assetTag           String       @unique // physical tag number
+  barcode            String?
+  name               String
+  description        String
+  serialNumber       String?
+  model              String?
+  manufacturer       String?
+  purchaseOrder      String?
+  invoiceNumber      String?
+  purchaseDate       DateTime
+  purchaseCost       Float
+  currency           String       @default("USD")
+  condition          String       // "New", "Good", "Fair", "Poor", "Damaged", "Unusable"
+  status             String       // "Available", "Assigned", "In Use", "Under Maintenance", "Disposed", "Retired", etc.
+  warrantyStart      DateTime?
+  warrantyEnd        DateTime?
+  usefulLifeYears    Int
+  depreciationMethod String       @default("Straight Line")
+  currentValue       Float
+  insuranceDetails   String?
+  photoUrl           String?
+  notes              String?
+  createdBy          String
+  updatedBy          String
+  createdAt          DateTime     @default(now())
+  updatedAt          DateTime     @updatedAt
+
+  categoryId         String
+  category           AssetCategory @relation(fields: [categoryId], references: [id])
+  supplierId         String?
+  supplier           Vendor?       @relation(fields: [supplierId], references: [id])
+  donorId            String?
+  donor              Donor?        @relation(fields: [donorId], references: [id])
+  grantId            String?
+  grant              Grant?        @relation(fields: [grantId], references: [id])
+  projectId          String?
+  project            Project?      @relation(fields: [projectId], references: [id])
+  departmentId       String?
+  department         Department?   @relation(fields: [departmentId], references: [id])
+  officeId           String?
+  office             Office?       @relation(fields: [officeId], references: [id])
+  custodianId        String?
+  custodian          User?         @relation("Custodian", fields: [custodianId], references: [id])
+
+  assignments        AssetAssignment[]
+  transfers          AssetTransfer[]
+  lifecycleEvents    AssetLifecycleEvent[]
+  maintenanceSchedules MaintenanceSchedule[]
+  maintenanceWorkOrders MaintenanceWorkOrder[]
+  contracts          Contract[]    @relation("ContractAssets")
+}
+
+model AssetAssignment {
+  id                    String    @id @default(uuid())
+  assetId               String
+  asset                 Asset     @relation(fields: [assetId], references: [id], onDelete: Cascade)
+  custodianId           String
+  assignedBy            String
+  assignedDate          DateTime  @default(now())
+  returnDueDate         DateTime?
+  returnedDate          DateTime?
+  conditionOnAssignment String
+  conditionOnReturn     String?
+  status                String    // "Active", "Returned", "Overdue"
+  notes                 String?
+  createdAt             DateTime  @default(now())
+}
+
+model AssetTransfer {
+  id              String   @id @default(uuid())
+  assetId         String
+  asset           Asset    @relation(fields: [assetId], references: [id], onDelete: Cascade)
+  transferType    String   // "Location", "Project", "Custodian"
+  sourceOfficeId  String?
+  destOfficeId    String?
+  sourceProjectId String?
+  destProjectId   String?
+  requestedBy     String
+  approvedBy      String?
+  transferDate    DateTime @default(now())
+  status          String   // "Pending", "Approved", "Rejected"
+  notes           String?
+  createdAt       DateTime @default(now())
+}
+
+model AssetLifecycleEvent {
+  id          String   @id @default(uuid())
+  assetId     String
+  asset       Asset    @relation(fields: [assetId], references: [id], onDelete: Cascade)
+  eventType   String   // "Acquisition", "Registration", "Tagging", "Assignment", "Transfer", "Maintenance", "DisposalRequest", "DisposalApproval", "DisposalReject"
+  eventDate   DateTime @default(now())
+  performedBy String
+  description String
+  notes       String?
+  createdAt   DateTime @default(now())
+}
+
+// 6. Maintenance
+model MaintenanceSchedule {
+  id              String    @id @default(uuid())
+  assetId         String
+  asset           Asset     @relation(fields: [assetId], references: [id], onDelete: Cascade)
+  maintenanceType String    // "Preventive", "Corrective"
+  description     String
+  frequencyDays   Int
+  lastRunDate     DateTime?
+  nextDueDate     DateTime
+  status          String    // "Active", "Inactive"
+  createdAt       DateTime  @default(now())
+}
+
+model MaintenanceWorkOrder {
+  id                String    @id @default(uuid())
+  assetId           String
+  asset             Asset     @relation(fields: [assetId], references: [id], onDelete: Cascade)
+  type              String    // "Preventive", "Corrective"
+  description       String
+  vendorId          String?
+  vendor            Vendor?   @relation(fields: [vendorId], references: [id])
+  assignedOfficerId String?   // Username or ID of maintenance officer
+  priority          String    // "Low", "Medium", "High", "Critical"
+  status            String    // "Scheduled", "Pending", "In Progress", "Completed", "Overdue", "Cancelled"
+  cost              Float     @default(0.0)
+  scheduledDate     DateTime
+  startDate         DateTime?
+  completionDate    DateTime?
+  checklist         String    // JSON string array
+  notes             String?
+  completionReport  String?
+  createdAt         DateTime  @default(now())
+}
+
+// 7. Contracts
+model Contract {
+  id                    String    @id @default(uuid())
+  title                 String
+  contractNumber        String    @unique
+  contractType          String    // "LTA", "Service Agreement", "Lease", "Procurement", "Employment"
+  startDate             DateTime
+  endDate               DateTime
+  value                 Float
+  currency              String    @default("USD")
+  paymentTerms          String
+  status                String    // "Draft", "Under Review", "Active", "Expiring Soon", "Expired", "Renewed", "Terminated", "Closed"
+  renewalStatus         String    // "None", "Pending", "Renewed", "Not Renewing"
+  noticePeriodDays      Int       @default(30)
+  deliverables          String    // Markdown or HTML text
+  milestonesDesc        String?
+  slaTerms              String?
+  complianceRequirements String?
+  signedDocUrl          String?
+  createdBy             String
+  updatedBy             String
+  createdAt             DateTime  @default(now())
+
+  vendorId              String
+  vendor                Vendor    @relation(fields: [vendorId], references: [id])
+  projectId             String?
+  project               Project?  @relation(fields: [projectId], references: [id])
+  grantId               String?
+  grant                 Grant?    @relation(fields: [grantId], references: [id])
+  donorId               String?
+  donor                 Donor?    @relation(fields: [donorId], references: [id])
+  contractManagerId     String
+  contractManager       User      @relation("ContractManager", fields: [contractManagerId], references: [id])
+  departmentId          String?
+  department            Department? @relation(fields: [departmentId], references: [id])
+
+  assets                Asset[]   @relation("ContractAssets")
+  milestones            ContractMilestone[]
+  payments              ContractPayment[]
+  amendments            ContractAmendment[]
+}
+
+model ContractMilestone {
+  id           String    @id @default(uuid())
+  contractId   String
+  contract     Contract  @relation(fields: [contractId], references: [id], onDelete: Cascade)
+  title        String
+  description  String
+  dueDate      DateTime
+  status       String    // "Pending", "Achieved", "Delayed"
+  achievedDate DateTime?
+  notes        String?
+}
+
+model ContractPayment {
+  id            String    @id @default(uuid())
+  contractId    String
+  contract      Contract  @relation(fields: [contractId], references: [id], onDelete: Cascade)
+  amount        Float
+  currency      String    @default("USD")
+  status        String    // "Planned", "Paid", "Overdue"
+  dueDate       DateTime
+  paidDate      DateTime?
+  invoiceNumber String?
+  notes         String?
+}
+
+model ContractAmendment {
+  id              String   @id @default(uuid())
+  contractId      String
+  contract        Contract @relation(fields: [contractId], references: [id], onDelete: Cascade)
+  amendmentNumber String
+  description     String
+  costChange      Float    @default(0.0)
+  endDateChange   DateTime?
+  approvedBy      String
+  amendmentDate   DateTime @default(now())
+  signedDocUrl    String?
+}
+
+// 8. Supportive
+model Document {
+  id         String   @id @default(uuid())
+  entityType String   // "Asset", "Contract", "Vendor", "Maintenance", "Disposal"
+  entityId   String
+  fileName   String
+  filePath   String
+  fileSize   Int
+  mimeType   String
+  fileCategory String // "Invoice", "Photo", "Warranty", "Contract", "Amendment", etc.
+  uploadedBy String
+  uploadedAt DateTime @default(now())
+}
+
+model Notification {
+  id         String   @id @default(uuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title      String
+  message    String
+  type       String   // "ContractExpiry", "MaintenanceDue", "AssetDisposal", etc.
+  isRead     Boolean  @default(false)
+  entityType String?
+  entityId   String?
+  createdAt  DateTime @default(now())
+}
+
+model AuditLog {
+  id            String   @id @default(uuid())
+  userId        String?
+  user          User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  action        String   // "LOGIN", "LOGOUT", "ASSET_CREATE", "ASSET_UPDATE", "ASSET_TRANSFER", etc.
+  module        String   // "Auth", "Assets", "Contracts", "Vendors", "Users"
+  recordId      String?
+  previousValue String?  // JSON string
+  newValue      String?  // JSON string
+  ipAddress     String?
+  timestamp     DateTime @default(now())
+  notes         String?
+}
+
+model SystemSetting {
+  id                         String   @id @default(uuid())
+  orgName                    String   @default("Plan International Liberia")
+  logoUrl                    String?
+  country                    String   @default("Liberia")
+  defaultCurrency            String   @default("USD")
+  dateFormat                 String   @default("YYYY-MM-DD")
+  assetCodePrefix            String   @default("PLAN-AST-")
+  contractCodePrefix         String   @default("PLAN-CON-")
+  maintenanceReminderDays    Int      @default(7)
+  contractExpiryReminderDays Int      @default(30)
+  warrantyExpiryReminderDays Int      @default(30)
+}
