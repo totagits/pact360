@@ -44,7 +44,7 @@ export const LoginPage: React.FC = () => {
         
         {/* Brand Header */}
         <div className="text-center">
-          <img className="mx-auto h-12 w-auto" src="/logo.png" alt="Plan International Logo" />
+          <img className="mx-auto h-16 w-auto" src="/logo.png" alt="Plan International Logo" />
           <h2 className="mt-6 text-3xl font-extrabold text-slate-900 tracking-tight">Sign in to PACT360</h2>
           <p className="mt-2 text-sm text-slate-500 font-medium">
             Project Asset and Contract Tracking 360° Management System

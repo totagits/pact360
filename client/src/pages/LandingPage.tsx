@@ -71,8 +71,8 @@ export const LandingPage: React.FC = () => {
       {/* Header */}
       <header className="bg-brand-500 border-b border-black/10 sticky top-0 z-50 px-6 py-4 flex items-center justify-between text-white">
         <div className="flex items-center gap-3">
-          <div className="bg-white px-2.5 py-1.5 rounded-lg shadow-sm flex items-center justify-center">
-            <img src={settings?.logoUrl || "/logo.png"} alt="Plan International Logo" className="h-7 w-auto" />
+          <div className="bg-white px-3.5 py-2 rounded-xl shadow-sm flex items-center justify-center">
+            <img src={settings?.logoUrl || "/logo.png"} alt="Plan International Logo" className="h-11 w-auto" />
           </div>
           <div className="h-6 w-[1px] bg-white/20"></div>
           <span className="text-xl font-bold tracking-tight text-white">
