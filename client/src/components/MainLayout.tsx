@@ -16,6 +16,7 @@ export const MainLayout: React.FC<{ children: React.ReactNode }> = ({ children }
   const [notifications, setNotifications] = useState<any[]>([]);
   const [showNotifications, setShowNotifications] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [settings, setSettings] = useState<any>(null);
 
   // Fetch notifications
   const fetchNotifications = async () => {
@@ -28,9 +29,40 @@ export const MainLayout: React.FC<{ children: React.ReactNode }> = ({ children }
     }
   };
 
+  // Fetch branding settings
+  const fetchSettings = async () => {
+    try {
+      const res = await api.get('/api/system/settings');
+      setSettings(res.data);
+      if (res.data.themeColor) {
+        const styleId = 'dynamic-brand-styles';
+        let styleEl = document.getElementById(styleId);
+        if (!styleEl) {
+          styleEl = document.createElement('style');
+          styleEl.id = styleId;
+          document.head.appendChild(styleEl);
+        }
+        const color = res.data.themeColor;
+        styleEl.innerHTML = `
+          .bg-brand-500 { background-color: ${color} !important; }
+          .hover\\:bg-brand-600:hover { background-color: ${color}d0 !important; }
+          .text-brand-600 { color: ${color} !important; }
+          .text-brand-700 { color: ${color}e0 !important; }
+          .text-brand-800 { color: ${color} !important; }
+          .text-brand-500 { color: ${color} !important; }
+          .border-brand-500 { border-color: ${color} !important; }
+          .bg-brand-50\\/20 { background-color: ${color}10 !important; }
+        `;
+      }
+    } catch (error) {
+      console.error('Error fetching settings:', error);
+    }
+  };
+
   useEffect(() => {
     if (user) {
       fetchNotifications();
+      fetchSettings();
       const interval = setInterval(fetchNotifications, 30000); // 30s polling
       return () => clearInterval(interval);
     }
@@ -74,9 +106,9 @@ export const MainLayout: React.FC<{ children: React.ReactNode }> = ({ children }
         {/* Sidebar Header */}
         <div className="px-6 py-5 border-b border-slate-800/80 flex items-center justify-between">
           <Link to="/dashboard" className="flex items-center gap-3">
-            <img src="/logo.png" alt="Plan Logo" className="h-8 w-auto bg-white/10 p-0.5 rounded" />
+            <img src={settings?.logoUrl || '/logo.png'} alt="Branding Logo" className="h-8 w-auto bg-white/10 p-0.5 rounded" />
             <span className="text-xl font-bold tracking-tight text-white">
-              PACT<span className="text-brand-400">360</span>
+              {settings?.systemName || 'TOTAG PACT360'}
             </span>
           </Link>
         </div>
@@ -147,7 +179,7 @@ export const MainLayout: React.FC<{ children: React.ReactNode }> = ({ children }
 
             {/* Breadcrumb / Page Title */}
             <div className="text-sm text-slate-400 font-medium hidden sm:flex items-center gap-2">
-              <span>Plan International Liberia</span>
+              <span>{settings?.orgName || 'Plan International Liberia'}</span>
               <span>/</span>
               <span className="text-slate-800 font-bold capitalize">
                 {currentPath.split('/')[1] || 'Dashboard'}
@@ -247,8 +279,8 @@ export const MainLayout: React.FC<{ children: React.ReactNode }> = ({ children }
               <X className="w-6 h-6" />
             </button>
             <div className="flex items-center gap-3 mb-8">
-              <img src="/logo.png" alt="Plan" className="h-8 w-auto" />
-              <span className="text-lg font-bold text-white">PACT360</span>
+              <img src={settings?.logoUrl || '/logo.png'} alt="Branding Logo" className="h-8 w-auto" />
+              <span className="text-lg font-bold text-white">{settings?.systemName || 'TOTAG PACT360'}</span>
             </div>
             <nav className="flex-1 space-y-1">
               {menuItems.map((item, idx) => {

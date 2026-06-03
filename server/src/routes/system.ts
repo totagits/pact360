@@ -49,6 +49,34 @@ router.post('/departments', authenticateJWT, requirePermission('settings:write')
 });
 
 // ==========================================
+// 2b. PHYSICAL LOCATIONS (Warehouses, rooms)
+// ==========================================
+router.get('/locations', authenticateJWT, async (req, res) => {
+  try {
+    const locations = await prisma.location.findMany({
+      include: { office: true },
+      orderBy: { name: 'asc' }
+    });
+    return res.json(locations);
+  } catch (error) {
+    return res.status(500).json({ error: 'Internal server error.' });
+  }
+});
+
+router.post('/locations', authenticateJWT, requirePermission('settings:write'), async (req, res) => {
+  try {
+    const location = await prisma.location.create({
+      data: req.body,
+      include: { office: true }
+    });
+    return res.status(201).json(location);
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ error: 'Internal server error.' });
+  }
+});
+
+// ==========================================
 // 3. SYSTEM SETTINGS
 // ==========================================
 router.get('/settings', authenticateJWT, async (req, res) => {

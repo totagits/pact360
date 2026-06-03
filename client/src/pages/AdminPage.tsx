@@ -16,6 +16,7 @@ export const AdminPage: React.FC = () => {
   const [offices, setOffices] = useState<any[]>([]);
   const [departments, setDepartments] = useState<any[]>([]);
   const [settings, setSettings] = useState<any>(null);
+  const [locations, setLocations] = useState<any[]>([]);
 
   // Modals Add / Edit
   const [showAddUser, setShowAddUser] = useState(false);
@@ -24,29 +25,44 @@ export const AdminPage: React.FC = () => {
   // Forms states
   const [userForm, setUserForm] = useState({ email: '', password: '', firstName: '', lastName: '', roleId: '', officeId: '', departmentId: '', status: 'Active' });
   const [locationForm, setLocationForm] = useState({ name: '', code: '', type: 'Field Office', location: '' });
+  const [subLocationForm, setSubLocationForm] = useState({ name: '', code: '', type: 'Warehouse', officeId: '' });
   const [deptForm, setDeptForm] = useState({ name: '', code: '' });
-  const [settingsForm, setSettingsForm] = useState({ orgName: '', assetCodePrefix: '', contractCodePrefix: '', maintenanceReminderDays: 7, contractExpiryReminderDays: 30 });
+  const [settingsForm, setSettingsForm] = useState({ 
+    orgName: '', 
+    assetCodePrefix: '', 
+    contractCodePrefix: '', 
+    maintenanceReminderDays: 7, 
+    contractExpiryReminderDays: 30,
+    systemName: '',
+    systemTagline: '',
+    themeColor: ''
+  });
 
   const fetchData = async () => {
     try {
-      const [uRes, rRes, oRes, dRes, sRes] = await Promise.all([
+      const [uRes, rRes, oRes, dRes, sRes, lRes] = await Promise.all([
         api.get('/api/auth/users'),
         api.get('/api/auth/roles'),
         api.get('/api/system/offices'),
         api.get('/api/system/departments'),
-        api.get('/api/system/settings')
+        api.get('/api/system/settings'),
+        api.get('/api/system/locations')
       ]);
       setUsers(uRes.data);
       setRoles(rRes.data);
       setOffices(oRes.data);
       setDepartments(dRes.data);
       setSettings(sRes.data);
+      setLocations(lRes.data);
       setSettingsForm({
         orgName: sRes.data.orgName,
         assetCodePrefix: sRes.data.assetCodePrefix,
         contractCodePrefix: sRes.data.contractCodePrefix,
         maintenanceReminderDays: sRes.data.maintenanceReminderDays,
-        contractExpiryReminderDays: sRes.data.contractExpiryReminderDays
+        contractExpiryReminderDays: sRes.data.contractExpiryReminderDays,
+        systemName: sRes.data.systemName || 'TOTAG PACT360',
+        systemTagline: sRes.data.systemTagline || 'Track. Manage. Comply. Deliver.',
+        themeColor: sRes.data.themeColor || '#0284c7'
       });
     } catch (err) {
       console.error(err);
@@ -101,6 +117,17 @@ export const AdminPage: React.FC = () => {
       await api.post('/api/system/offices', locationForm);
       fetchData();
       setLocationForm({ name: '', code: '', type: 'Field Office', location: '' });
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleCreateSubLocation = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      await api.post('/api/system/locations', subLocationForm);
+      fetchData();
+      setSubLocationForm({ name: '', code: '', type: 'Warehouse', officeId: '' });
     } catch (err) {
       console.error(err);
     }
@@ -209,54 +236,125 @@ export const AdminPage: React.FC = () => {
       )}
 
       {activeTab === 'locations' && (
-        <div className="grid md:grid-cols-12 gap-6 items-start">
-          <div className="md:col-span-8 bg-white border rounded-xl overflow-hidden shadow-sm">
-            <table className="min-w-full divide-y divide-slate-200 text-left text-xs font-medium text-slate-700">
-              <thead className="bg-slate-50 text-slate-500 font-semibold">
-                <tr>
-                  <th className="px-6 py-3">Location Name</th>
-                  <th className="px-6 py-3">Type</th>
-                  <th className="px-6 py-3">Address Location</th>
-                  <th className="px-6 py-3">Code</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                {offices.map((o) => (
-                  <tr key={o.id}>
-                    <td className="px-6 py-4 font-bold text-slate-900">{o.name}</td>
-                    <td className="px-6 py-4 text-slate-500">{o.type}</td>
-                    <td className="px-6 py-4 text-slate-500">{o.location}</td>
-                    <td className="px-6 py-4 font-mono font-bold text-brand-600">{o.code}</td>
+        <div className="space-y-8">
+          {/* Section 1: Offices */}
+          <div className="grid md:grid-cols-12 gap-6 items-start">
+            <div className="md:col-span-8 bg-white border rounded-xl overflow-hidden shadow-sm">
+              <div className="px-6 py-4 bg-slate-50 border-b border-slate-200">
+                <h3 className="font-bold text-slate-800 text-sm">System Offices & Main Facilities</h3>
+              </div>
+              <table className="min-w-full divide-y divide-slate-200 text-left text-xs font-medium text-slate-700">
+                <thead className="bg-slate-50 text-slate-500 font-semibold">
+                  <tr>
+                    <th className="px-6 py-3">Office Name</th>
+                    <th className="px-6 py-3">Type</th>
+                    <th className="px-6 py-3">Address Location</th>
+                    <th className="px-6 py-3">Code</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {offices.map((o) => (
+                    <tr key={o.id}>
+                      <td className="px-6 py-4 font-bold text-slate-900">{o.name}</td>
+                      <td className="px-6 py-4 text-slate-500">{o.type}</td>
+                      <td className="px-6 py-4 text-slate-500">{o.location}</td>
+                      <td className="px-6 py-4 font-mono font-bold text-brand-600">{o.code}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            <form onSubmit={handleCreateLocation} className="md:col-span-4 bg-white border p-5 rounded-xl shadow-sm space-y-4">
+              <h3 className="font-bold text-slate-800 text-sm">Add Operations Location / Office</h3>
+              <div>
+                <label className="block text-xs font-semibold text-slate-500 mb-1">Office Name</label>
+                <input type="text" value={locationForm.name} onChange={(e) => setLocationForm({ ...locationForm, name: e.target.value })} className="block w-full border rounded-lg p-2.5 text-xs" placeholder="e.g. Nimba Field Office" required />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-slate-500 mb-1">Office Code</label>
+                <input type="text" value={locationForm.code} onChange={(e) => setLocationForm({ ...locationForm, code: e.target.value })} className="block w-full border rounded-lg p-2.5 text-xs" placeholder="e.g. NFO" required />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-slate-500 mb-1">Location Type</label>
+                <select value={locationForm.type} onChange={(e) => setLocationForm({ ...locationForm, type: e.target.value })} className="block w-full border rounded-lg p-2.5 text-xs">
+                  <option value="Country Office">Country Office</option>
+                  <option value="Field Office">Field Office</option>
+                  <option value="Warehouse">Warehouse</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-slate-500 mb-1">Physical Address</label>
+                <input type="text" value={locationForm.location} onChange={(e) => setLocationForm({ ...locationForm, location: e.target.value })} className="block w-full border rounded-lg p-2.5 text-xs" placeholder="e.g. Voinjama, Lofa" required />
+              </div>
+              <button type="submit" className="w-full bg-brand-500 hover:bg-brand-600 text-white font-bold py-2 rounded-lg text-xs transition-colors shadow-sm">Save Office</button>
+            </form>
           </div>
 
-          <form onSubmit={handleCreateLocation} className="md:col-span-4 bg-white border p-5 rounded-xl shadow-sm space-y-4">
-            <h3 className="font-bold text-slate-800 text-sm">Add Operations Location</h3>
-            <div>
-              <label className="block text-xs font-semibold text-slate-500 mb-1">Office Name</label>
-              <input type="text" value={locationForm.name} onChange={(e) => setLocationForm({ ...locationForm, name: e.target.value })} className="block w-full border rounded-lg p-2.5 text-xs" placeholder="e.g. Nimba Field Office" required />
+          {/* Section 2: Sub-locations */}
+          <div className="grid md:grid-cols-12 gap-6 items-start">
+            <div className="md:col-span-8 bg-white border rounded-xl overflow-hidden shadow-sm">
+              <div className="px-6 py-4 bg-slate-50 border-b border-slate-200">
+                <h3 className="font-bold text-slate-800 text-sm">Physical Storage Locations (Rooms, Warehouses)</h3>
+              </div>
+              <table className="min-w-full divide-y divide-slate-200 text-left text-xs font-medium text-slate-700">
+                <thead className="bg-slate-50 text-slate-500 font-semibold">
+                  <tr>
+                    <th className="px-6 py-3">Storage Name</th>
+                    <th className="px-6 py-3">Type</th>
+                    <th className="px-6 py-3">Main Office Facility</th>
+                    <th className="px-6 py-3">Code</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {locations.length === 0 ? (
+                    <tr>
+                      <td colSpan={4} className="px-6 py-4 text-center text-slate-400 italic">No sub-locations configured.</td>
+                    </tr>
+                  ) : (
+                    locations.map((loc) => (
+                      <tr key={loc.id}>
+                        <td className="px-6 py-4 font-bold text-slate-900">{loc.name}</td>
+                        <td className="px-6 py-4 text-slate-500">{loc.type}</td>
+                        <td className="px-6 py-4 text-slate-500">{loc.office?.name || 'N/A'}</td>
+                        <td className="px-6 py-4 font-mono font-bold text-brand-600">{loc.code}</td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
             </div>
-            <div>
-              <label className="block text-xs font-semibold text-slate-500 mb-1">Office Code</label>
-              <input type="text" value={locationForm.code} onChange={(e) => setLocationForm({ ...locationForm, code: e.target.value })} className="block w-full border rounded-lg p-2.5 text-xs" placeholder="e.g. NFO" required />
-            </div>
-            <div>
-              <label className="block text-xs font-semibold text-slate-500 mb-1">Location Type</label>
-              <select value={locationForm.type} onChange={(e) => setLocationForm({ ...locationForm, type: e.target.value })} className="block w-full border rounded-lg p-2.5 text-xs">
-                <option value="Country Office">Country Office</option>
-                <option value="Field Office">Field Office</option>
-                <option value="Warehouse">Warehouse</option>
-              </select>
-            </div>
-            <div>
-              <label className="block text-xs font-semibold text-slate-500 mb-1">Physical Address</label>
-              <input type="text" value={locationForm.location} onChange={(e) => setLocationForm({ ...locationForm, location: e.target.value })} className="block w-full border rounded-lg p-2.5 text-xs" placeholder="e.g. Voinjama, Lofa" required />
-            </div>
-            <button type="submit" className="w-full bg-brand-505 bg-brand-500 hover:bg-brand-600 text-white font-bold py-2 rounded-lg text-xs transition-colors shadow-sm">Save Location</button>
-          </form>
+
+            <form onSubmit={handleCreateSubLocation} className="md:col-span-4 bg-white border p-5 rounded-xl shadow-sm space-y-4">
+              <h3 className="font-bold text-slate-800 text-sm">Add Sub-Location (Warehouse / Room)</h3>
+              <div>
+                <label className="block text-xs font-semibold text-slate-500 mb-1">Storage Area Name</label>
+                <input type="text" value={subLocationForm.name} onChange={(e) => setSubLocationForm({ ...subLocationForm, name: e.target.value })} className="block w-full border rounded-lg p-2.5 text-xs" placeholder="e.g. IT Equipment Room A" required />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-slate-500 mb-1">Storage Area Code</label>
+                <input type="text" value={subLocationForm.code} onChange={(e) => setSubLocationForm({ ...subLocationForm, code: e.target.value })} className="block w-full border rounded-lg p-2.5 text-xs" placeholder="e.g. IT-RA" required />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-slate-500 mb-1">Type</label>
+                <select value={subLocationForm.type} onChange={(e) => setSubLocationForm({ ...subLocationForm, type: e.target.value })} className="block w-full border rounded-lg p-2.5 text-xs">
+                  <option value="Warehouse">Warehouse</option>
+                  <option value="Storage Room">Storage Room</option>
+                  <option value="Office Room">Office Room</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-slate-500 mb-1">Main Facility Office</label>
+                <select value={subLocationForm.officeId} onChange={(e) => setSubLocationForm({ ...subLocationForm, officeId: e.target.value })} className="block w-full border rounded-lg p-2.5 text-xs" required>
+                  <option value="">-- Choose Office --</option>
+                  {offices.map(o => (
+                    <option key={o.id} value={o.id}>{o.name}</option>
+                  ))}
+                </select>
+              </div>
+              <button type="submit" className="w-full bg-brand-500 hover:bg-brand-600 text-white font-bold py-2 rounded-lg text-xs transition-colors shadow-sm">Save Sub-Location</button>
+            </form>
+          </div>
         </div>
       )}
 
@@ -305,6 +403,21 @@ export const AdminPage: React.FC = () => {
               <label className="block text-xs font-semibold text-slate-500 mb-1">Organization Name</label>
               <input type="text" value={settingsForm.orgName} onChange={(e) => setSettingsForm({ ...settingsForm, orgName: e.target.value })} className="block w-full border rounded-lg p-2.5 text-sm" required />
             </div>
+            <div className="col-span-2">
+              <label className="block text-xs font-semibold text-slate-500 mb-1">System Name (Dynamic White-Labeling)</label>
+              <input type="text" value={settingsForm.systemName} onChange={(e) => setSettingsForm({ ...settingsForm, systemName: e.target.value })} className="block w-full border rounded-lg p-2.5 text-sm" placeholder="e.g. TOTAG PACT360" required />
+            </div>
+            <div className="col-span-2">
+              <label className="block text-xs font-semibold text-slate-500 mb-1">System Tagline</label>
+              <input type="text" value={settingsForm.systemTagline} onChange={(e) => setSettingsForm({ ...settingsForm, systemTagline: e.target.value })} className="block w-full border rounded-lg p-2.5 text-sm" placeholder="e.g. Track. Manage. Comply. Deliver." required />
+            </div>
+            <div className="col-span-2">
+              <label className="block text-xs font-semibold text-slate-500 mb-1">Primary Theme Color</label>
+              <div className="flex gap-2 items-center">
+                <input type="color" value={settingsForm.themeColor} onChange={(e) => setSettingsForm({ ...settingsForm, themeColor: e.target.value })} className="h-10 w-16 border rounded-lg p-0.5 cursor-pointer" required />
+                <input type="text" value={settingsForm.themeColor} onChange={(e) => setSettingsForm({ ...settingsForm, themeColor: e.target.value })} className="block w-full border rounded-lg p-2.5 text-sm font-mono" placeholder="#0284c7" required />
+              </div>
+            </div>
             <div>
               <label className="block text-xs font-semibold text-slate-500 mb-1">Asset Code Prefix</label>
               <input type="text" value={settingsForm.assetCodePrefix} onChange={(e) => setSettingsForm({ ...settingsForm, assetCodePrefix: e.target.value })} className="block w-full border rounded-lg p-2.5 text-sm" required />
@@ -322,7 +435,7 @@ export const AdminPage: React.FC = () => {
               <input type="number" value={settingsForm.contractExpiryReminderDays} onChange={(e) => setSettingsForm({ ...settingsForm, contractExpiryReminderDays: parseInt(e.target.value) })} className="block w-full border rounded-lg p-2.5 text-sm" required />
             </div>
           </div>
-
+ 
           <button type="submit" className="bg-brand-500 hover:bg-brand-600 text-white font-bold py-2.5 px-6 rounded-lg text-sm transition-colors shadow-md flex items-center gap-1.5 ml-auto">
             <Save className="w-4 h-4" /> Save Preferences
           </button>

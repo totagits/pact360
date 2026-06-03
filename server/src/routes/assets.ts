@@ -598,35 +598,477 @@ router.post('/:id/dispose', authenticateJWT, requirePermission('assets:dispose')
   }
 });
 
-// POST /api/assets/bulk-import - Mock CSV upload
-router.post('/bulk-import', authenticateJWT, requirePermission('assets:write'), async (req: AuthenticatedRequest, res) => {
-  const { assets } = req.body; // Array of asset payloads
+// ==========================================
+// 8. DATA MIGRATION MODULE (Excel/CSV Imports)
+// ==========================================
 
-  if (!Array.isArray(assets)) {
-    return res.status(400).json({ error: 'Payload must contain assets array.' });
+// POST /api/assets/import/preview - Preview and validate parsed columns
+router.post('/import/preview', authenticateJWT, requirePermission('assets:write'), async (req, res) => {
+  const { rows } = req.body; // Array of raw rows from parsed spreadsheet
+  if (!Array.isArray(rows)) {
+    return res.status(400).json({ error: 'Payload must contain rows array.' });
   }
 
   try {
-    const created = [];
-    for (const a of assets) {
-      const assetCode = await generateAssetCode(a.categoryId);
-      const newAsset = await prisma.asset.create({
-        data: {
-          ...a,
-          assetCode,
-          purchaseDate: new Date(a.purchaseDate),
-          currentValue: parseFloat(a.purchaseCost),
-          purchaseCost: parseFloat(a.purchaseCost),
-          usefulLifeYears: parseInt(a.usefulLifeYears),
-          createdBy: req.user?.email || 'Bulk System',
-          updatedBy: req.user?.email || 'Bulk System'
-        }
+    const categories = await prisma.assetCategory.findMany();
+    const offices = await prisma.office.findMany();
+    const existingTags = new Set((await prisma.asset.findMany({ select: { assetTag: true } })).map(a => a.assetTag));
+    const existingSerials = new Set((await prisma.asset.findMany({ select: { serialNumber: true } })).filter(a => a.serialNumber).map(a => a.serialNumber));
+
+    const validatedRows = [];
+    const seenTagsInBatch = new Set<string>();
+
+    for (let idx = 0; idx < rows.length; idx++) {
+      const row = rows[idx];
+      const errors = [];
+      
+      const name = row.name || row['Asset Name'] || '';
+      const assetTag = row.assetTag || row['Asset Code/Tag'] || row['Asset Tag'] || '';
+      const serialNumber = row.serialNumber || row['Serial Number'] || '';
+      const costStr = String(row.purchaseCost || row['Purchase Cost'] || '');
+      const dateStr = String(row.purchaseDate || row['Purchase Date'] || '');
+      const categoryName = row.category || row['Category'] || '';
+      const officeName = row.office || row['Office/Location'] || '';
+
+      // Required field checks
+      if (!name) errors.push('Asset name is required.');
+      if (!assetTag) errors.push('Asset tag is required.');
+      if (!categoryName) errors.push('Asset category is required.');
+      if (!officeName) errors.push('Office / Location is required.');
+
+      // Check duplicates
+      if (assetTag) {
+        if (existingTags.has(assetTag)) errors.push(`Asset tag "${assetTag}" already exists in database.`);
+        if (seenTagsInBatch.has(assetTag)) errors.push(`Duplicate asset tag "${assetTag}" in this import sheet.`);
+        seenTagsInBatch.add(assetTag);
+      }
+      if (serialNumber && existingSerials.has(serialNumber)) {
+        errors.push(`Serial number "${serialNumber}" already exists in database.`);
+      }
+
+      // Check Category existence
+      const matchedCat = categories.find(c => c.name.toLowerCase() === categoryName.toLowerCase() || c.code.toLowerCase() === categoryName.toLowerCase());
+      if (categoryName && !matchedCat) {
+        errors.push(`Category "${categoryName}" does not exist. Please configure it first.`);
+      }
+
+      // Check Office existence
+      const matchedOff = offices.find(o => o.name.toLowerCase() === officeName.toLowerCase() || o.code.toLowerCase() === officeName.toLowerCase());
+      if (officeName && !matchedOff) {
+        errors.push(`Office location "${officeName}" is not registered.`);
+      }
+
+      // Cost validation
+      const cost = parseFloat(costStr);
+      if (costStr && (isNaN(cost) || cost < 0)) {
+        errors.push('Purchase cost must be a positive number.');
+      }
+
+      // Date validation
+      const purchaseDate = new Date(dateStr);
+      if (dateStr && isNaN(purchaseDate.getTime())) {
+        errors.push('Purchase date format is invalid.');
+      }
+
+      // Missing donor warning (non-blocking warning, but good policy)
+      const donor = row.donor || row['Donor'] || '';
+      const grant = row.grant || row['Grant'] || '';
+      const project = row.project || row['Project'] || '';
+      const warnings = [];
+      if (!donor && !grant && !project) {
+        warnings.push('Asset is not linked to any donor, grant, or project budget code.');
+      }
+
+      validatedRows.push({
+        rowNumber: idx + 1,
+        raw: row,
+        name,
+        assetTag,
+        serialNumber,
+        purchaseCost: isNaN(cost) ? 0 : cost,
+        purchaseDate: isNaN(purchaseDate.getTime()) ? null : purchaseDate,
+        categoryName,
+        officeName,
+        categoryId: matchedCat?.id || null,
+        officeId: matchedOff?.id || null,
+        donorCode: donor,
+        grantCode: grant,
+        projectCode: project,
+        errors,
+        warnings,
+        isValid: errors.length === 0
       });
-      created.push(newAsset);
     }
 
-    return res.json({ success: true, count: created.length });
+    return res.json({
+      totalCount: rows.length,
+      validCount: validatedRows.filter(r => r.isValid).length,
+      invalidCount: validatedRows.filter(r => !r.isValid).length,
+      rows: validatedRows
+    });
   } catch (error) {
+    console.error('Import preview error:', error);
+    return res.status(500).json({ error: 'Internal server error.' });
+  }
+});
+
+// POST /api/assets/import/commit - Commit validated import batch
+router.post('/import/commit', authenticateJWT, requirePermission('assets:write'), async (req: AuthenticatedRequest, res) => {
+  const { batchName, fileName, rows } = req.body;
+
+  if (!Array.isArray(rows) || rows.length === 0) {
+    return res.status(400).json({ error: 'Payload must contain rows to commit.' });
+  }
+
+  try {
+    // 1. Create the Import Batch record
+    const batch = await prisma.assetImportBatch.create({
+      data: {
+        batchName: batchName || `Import-${new Date().toLocaleDateString()}`,
+        fileName: fileName || 'spreadsheet.csv',
+        rowCount: rows.length,
+        status: 'Completed',
+        importedBy: req.user?.email || 'System'
+      }
+    });
+
+    const importedAssets = [];
+    const importErrors = [];
+
+    // Fetch related items to resolve names
+    const donors = await prisma.donor.findMany();
+    const grants = await prisma.grant.findMany();
+    const projects = await prisma.project.findMany();
+
+    for (const r of rows) {
+      if (!r.isValid) {
+        // Log errors to Database for record keeping
+        for (const errMsg of r.errors) {
+          const errLog = await prisma.assetImportError.create({
+            data: {
+              batchId: batch.id,
+              rowNumber: r.rowNumber,
+              columnName: 'Multiple',
+              errorType: 'Validation Failure',
+              errorMessage: errMsg,
+              invalidValue: JSON.stringify(r.raw)
+            }
+          });
+          importErrors.push(errLog);
+        }
+        continue;
+      }
+
+      // Resolve links if provided
+      const donor = donors.find(d => d.code.toLowerCase() === String(r.donorCode || '').toLowerCase() || d.name.toLowerCase() === String(r.donorCode || '').toLowerCase());
+      const grant = grants.find(g => g.code.toLowerCase() === String(r.grantCode || '').toLowerCase() || g.name.toLowerCase() === String(r.grantCode || '').toLowerCase());
+      const project = projects.find(p => p.code.toLowerCase() === String(r.projectCode || '').toLowerCase() || p.name.toLowerCase() === String(r.projectCode || '').toLowerCase());
+
+      // Auto-generate code
+      const assetCode = await generateAssetCode(r.categoryId);
+
+      const newAsset = await prisma.asset.create({
+        data: {
+          assetCode,
+          assetTag: r.assetTag,
+          barcode: `BAR-${assetCode}`,
+          name: r.name,
+          description: r.raw.description || r.raw['Asset Description'] || 'Imported via data migration spreadsheet.',
+          serialNumber: r.serialNumber || null,
+          model: r.raw.model || r.raw['Model'] || null,
+          manufacturer: r.raw.manufacturer || r.raw['Manufacturer'] || null,
+          purchaseDate: new Date(r.purchaseDate),
+          purchaseCost: parseFloat(r.purchaseCost),
+          currentValue: parseFloat(r.purchaseCost),
+          usefulLifeYears: parseInt(r.raw.usefulLifeYears || r.raw['Useful Life'] || 5),
+          condition: r.raw.condition || r.raw['Condition'] || 'Good',
+          status: 'Available',
+          createdBy: req.user?.email || 'System',
+          updatedBy: req.user?.email || 'System',
+          categoryId: r.categoryId,
+          officeId: r.officeId,
+          donorId: donor?.id || null,
+          grantId: grant?.id || null,
+          projectId: project?.id || null,
+          importBatchId: batch.id
+        }
+      });
+
+      // Write to Lifecycle
+      await prisma.assetLifecycleEvent.create({
+        data: {
+          assetId: newAsset.id,
+          eventType: 'Acquisition',
+          performedBy: req.user?.email || 'System',
+          description: `Asset imported in batch "${batch.batchName}". Tag: ${newAsset.assetTag}`
+        }
+      });
+
+      importedAssets.push(newAsset);
+    }
+
+    await logAudit({
+      userId: req.user?.userId,
+      action: 'ASSET_IMPORT',
+      module: 'Assets',
+      recordId: batch.id,
+      notes: `Committed Excel/CSV asset migration batch "${batch.batchName}". Imported: ${importedAssets.length} assets.`
+    });
+
+    return res.json({
+      success: true,
+      batchId: batch.id,
+      importedCount: importedAssets.length,
+      failedCount: importErrors.length
+    });
+  } catch (error) {
+    console.error('Import commit error:', error);
+    return res.status(500).json({ error: 'Internal server error.' });
+  }
+});
+
+// GET /api/assets/import/batches - Fetch import batches
+router.get('/import/batches', authenticateJWT, async (req, res) => {
+  try {
+    const batches = await prisma.assetImportBatch.findMany({
+      include: { errors: true },
+      orderBy: { createdAt: 'desc' }
+    });
+    return res.json(batches);
+  } catch (error) {
+    return res.status(500).json({ error: 'Internal server error.' });
+  }
+});
+
+// POST /api/assets/import/batches/:id/rollback - Rollback batch assets
+router.post('/import/batches/:id/rollback', authenticateJWT, requirePermission('assets:write'), async (req: AuthenticatedRequest, res) => {
+  const { id } = req.params;
+
+  try {
+    const batch = await prisma.assetImportBatch.findUnique({ where: { id } });
+    if (!batch) return res.status(404).json({ error: 'Import batch not found.' });
+    if (batch.status === 'Rolled Back') {
+      return res.status(400).json({ error: 'Batch has already been rolled back.' });
+    }
+
+    // Delete assets belonging to batch
+    const deleteResult = await prisma.asset.deleteMany({
+      where: { importBatchId: id }
+    });
+
+    // Update batch status
+    await prisma.assetImportBatch.update({
+      where: { id },
+      data: { status: 'Rolled Back' }
+    });
+
+    await logAudit({
+      userId: req.user?.userId,
+      action: 'ASSET_IMPORT_ROLLBACK',
+      module: 'Assets',
+      recordId: id,
+      notes: `Rolled back import batch "${batch.batchName}". Deleted ${deleteResult.count} imported assets.`
+    });
+
+    return res.json({ success: true, count: deleteResult.count });
+  } catch (error) {
+    console.error('Rollback error:', error);
+    return res.status(500).json({ error: 'Internal server error.' });
+  }
+});
+
+// ==========================================
+// 9. PHYSICAL ASSET VERIFICATION MODULE
+// ==========================================
+
+// GET /api/assets/verification/campaigns - Fetch campaigns
+router.get('/verification/campaigns', authenticateJWT, async (req, res) => {
+  try {
+    const campaigns = await prisma.verificationCampaign.findMany({
+      include: { office: true, verifications: true },
+      orderBy: { createdAt: 'desc' }
+    });
+    return res.json(campaigns);
+  } catch (error) {
+    return res.status(500).json({ error: 'Internal server error.' });
+  }
+});
+
+// POST /api/assets/verification/campaigns - Create verification campaign
+router.post('/verification/campaigns', authenticateJWT, requirePermission('assets:write'), async (req, res) => {
+  const { name, startDate, endDate, assignedTeam, officeId } = req.body;
+
+  if (!name || !startDate || !endDate) {
+    return res.status(400).json({ error: 'Campaign name, start date, and end date are required.' });
+  }
+
+  try {
+    const campaign = await prisma.verificationCampaign.create({
+      data: {
+        name,
+        startDate: new Date(startDate),
+        endDate: new Date(endDate),
+        assignedTeam: assignedTeam || 'All Logistics Team',
+        status: 'Active',
+        officeId: officeId || null
+      },
+      include: { office: true }
+    });
+
+    return res.status(201).json(campaign);
+  } catch (error) {
+    console.error('Campaign creation error:', error);
+    return res.status(500).json({ error: 'Internal server error.' });
+  }
+});
+
+// GET /api/assets/verification/campaigns/:id/assets - Fetch expected assets
+router.get('/verification/campaigns/:id/assets', authenticateJWT, async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const campaign = await prisma.verificationCampaign.findUnique({ where: { id } });
+    if (!campaign) return res.status(404).json({ error: 'Campaign not found.' });
+
+    // Find expected assets based on campaign target office filter
+    const whereClause: any = {};
+    if (campaign.officeId) {
+      whereClause.officeId = campaign.officeId;
+    }
+
+    const assets = await prisma.asset.findMany({
+      where: whereClause,
+      include: {
+        category: true,
+        office: true,
+        verifications: {
+          where: { campaignId: id }
+        }
+      }
+    });
+
+    return res.json(assets);
+  } catch (error) {
+    return res.status(500).json({ error: 'Internal server error.' });
+  }
+});
+
+// POST /api/assets/verification/campaigns/:id/verify - Submit verification entry
+router.post('/verification/campaigns/:id/verify', authenticateJWT, requirePermission('assets:assign'), async (req: AuthenticatedRequest, res) => {
+  const { id } = req.params;
+  const { assetId, status, condition, notes, evidenceUrl } = req.body;
+
+  if (!assetId || !status || !condition) {
+    return res.status(400).json({ error: 'Asset ID, count status, and condition are required.' });
+  }
+
+  try {
+    const campaign = await prisma.verificationCampaign.findUnique({ where: { id } });
+    if (!campaign) return res.status(404).json({ error: 'Campaign not found.' });
+
+    const asset = await prisma.asset.findUnique({ where: { id: assetId } });
+    if (!asset) return res.status(404).json({ error: 'Asset not found.' });
+
+    // Create verification record
+    const verification = await prisma.assetVerification.create({
+      data: {
+        campaignId: id,
+        assetId,
+        verifiedBy: req.user?.email || 'System',
+        status, // "Verified", "Missing", "Damaged"
+        condition,
+        notes,
+        evidenceUrl
+      }
+    });
+
+    // Update asset condition and status
+    const updatePayload: any = { condition };
+    if (status === 'Missing') {
+      updatePayload.status = 'Lost';
+    } else if (status === 'Damaged') {
+      updatePayload.status = 'Damaged';
+    }
+    
+    await prisma.asset.update({
+      where: { id: assetId },
+      data: updatePayload
+    });
+
+    // Add Lifecycle entry
+    await prisma.assetLifecycleEvent.create({
+      data: {
+        assetId,
+        eventType: 'Verification',
+        performedBy: req.user?.email || 'System',
+        description: `Inspected during campaign "${campaign.name}". Result: ${status}. Condition: ${condition}.`
+      }
+    });
+
+    return res.status(201).json(verification);
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ error: 'Internal server error.' });
+  }
+});
+
+// GET /api/assets/verification/campaigns/:id/variance - Variance report
+router.get('/verification/campaigns/:id/variance', authenticateJWT, async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const campaign = await prisma.verificationCampaign.findUnique({ where: { id } });
+    if (!campaign) return res.status(404).json({ error: 'Campaign not found.' });
+
+    const expectedWhere: any = {};
+    if (campaign.officeId) {
+      expectedWhere.officeId = campaign.officeId;
+    }
+
+    const expectedAssets = await prisma.asset.findMany({
+      where: expectedWhere,
+      include: { category: true, office: true }
+    });
+
+    const countedVerifications = await prisma.assetVerification.findMany({
+      where: { campaignId: id },
+      include: { asset: { include: { category: true, office: true } } }
+    });
+
+    const verified = [];
+    const missing = [];
+    const damaged = [];
+    const uncounted = [];
+
+    for (const asset of expectedAssets) {
+      const vLog = countedVerifications.find(cv => cv.assetId === asset.id);
+      if (!vLog) {
+        uncounted.push(asset);
+      } else if (vLog.status === 'Verified') {
+        verified.push({ asset, countedAt: vLog.verifiedAt, notes: vLog.notes });
+      } else if (vLog.status === 'Missing') {
+        missing.push({ asset, countedAt: vLog.verifiedAt, notes: vLog.notes });
+      } else if (vLog.status === 'Damaged') {
+        damaged.push({ asset, countedAt: vLog.verifiedAt, notes: vLog.notes, condition: vLog.condition });
+      }
+    }
+
+    return res.json({
+      campaignName: campaign.name,
+      metrics: {
+        expected: expectedAssets.length,
+        verified: verified.length,
+        missing: missing.length,
+        damaged: damaged.length,
+        uncounted: uncounted.length
+      },
+      verified,
+      missing,
+      damaged,
+      uncounted
+    });
+  } catch (error) {
+    console.error(error);
     return res.status(500).json({ error: 'Internal server error.' });
   }
 });

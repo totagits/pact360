@@ -45,7 +45,7 @@ export const LandingPage: React.FC = () => {
         <div className="flex items-center gap-3">
           <img src="/logo.png" alt="Plan International Logo" className="h-10 w-auto" />
           <div className="h-6 w-[1px] bg-slate-300"></div>
-          <span className="text-xl font-bold tracking-tight text-brand-800">PACT<span className="text-brand-500">360</span></span>
+          <span className="text-xl font-bold tracking-tight text-brand-800">TOTAG PACT<span className="text-brand-500">360</span></span>
         </div>
         <Link 
           to="/login" 
@@ -60,13 +60,13 @@ export const LandingPage: React.FC = () => {
         {/* Left Info Column */}
         <div className="md:col-span-7 flex flex-col gap-6">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-50 border border-brand-100 text-brand-600 text-sm font-semibold w-fit">
-            <Shield className="w-4 h-4" /> Secure Enterprise System
+            <Shield className="w-4 h-4" /> Track. Manage. Comply. Deliver.
           </div>
           <h1 className="text-4xl md:text-5xl font-extrabold text-slate-900 tracking-tight leading-tight">
-            Project Asset, Contract, and Lifecycle Tracking
+            TOTAG PACT360 – Project Asset and Contract Tracking 360° Management System
           </h1>
           <p className="text-lg text-slate-600 leading-relaxed max-w-xl">
-            A comprehensive tracking and lifecycle management suite tailored for **Plan International Liberia** to manage assets, contracts, maintenance operations, and donor compliance across all programs.
+            A secure, enterprise-grade web platform custom-built for **Plan International Liberia** to transition from Excel to a real-time, data-integrity-driven asset and contract lifecycle tracking platform.
           </p>
 
           <div className="flex items-center gap-4 mt-2">

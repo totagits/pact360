@@ -25,6 +25,8 @@ model User {
   office            Office?      @relation(fields: [officeId], references: [id])
   departmentId      String?
   department        Department?  @relation(fields: [departmentId], references: [id])
+  locationId        String?
+  location          Location?    @relation(fields: [locationId], references: [id])
 
   // Relations to other entities
   assignedAssets    Asset[]      @relation("Custodian")
@@ -66,6 +68,8 @@ model Office {
 
   users     User[]
   assets    Asset[]
+  locations Location[]
+  verificationCampaigns VerificationCampaign[]
 }
 
 model Department {
@@ -209,6 +213,10 @@ model Asset {
   office             Office?       @relation(fields: [officeId], references: [id])
   custodianId        String?
   custodian          User?         @relation("Custodian", fields: [custodianId], references: [id])
+  locationId         String?
+  location           Location?     @relation(fields: [locationId], references: [id])
+  importBatchId      String?
+  importBatch        AssetImportBatch? @relation(fields: [importBatchId], references: [id])
 
   assignments        AssetAssignment[]
   transfers          AssetTransfer[]
@@ -216,6 +224,7 @@ model Asset {
   maintenanceSchedules MaintenanceSchedule[]
   maintenanceWorkOrders MaintenanceWorkOrder[]
   contracts          Contract[]    @relation("ContractAssets")
+  verifications      AssetVerification[]
 }
 
 model AssetAssignment {
@@ -431,4 +440,75 @@ model SystemSetting {
   maintenanceReminderDays    Int      @default(7)
   contractExpiryReminderDays Int      @default(30)
   warrantyExpiryReminderDays Int      @default(30)
+  systemName                 String   @default("TOTAG PACT360")
+  systemTagline              String   @default("Track. Manage. Comply. Deliver.")
+  themeColor                 String   @default("#0284c7")
+}
+
+// 9. New white-labeling and operational tracking models
+model Location {
+  id        String   @id @default(uuid())
+  name      String   @unique
+  code      String   @unique
+  type      String   // "Warehouse", "Storage Room", "Office Room"
+  officeId  String
+  office    Office   @relation(fields: [officeId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  assets    Asset[]
+  users     User[]
+}
+
+model AssetImportBatch {
+  id          String   @id @default(uuid())
+  batchName   String
+  fileName    String
+  rowCount    Int
+  status      String   // "Completed", "Rolled Back"
+  importedBy  String
+  createdAt   DateTime @default(now())
+
+  assets      Asset[]
+  errors      AssetImportError[]
+}
+
+model AssetImportError {
+  id           String   @id @default(uuid())
+  batchId      String
+  batch        AssetImportBatch @relation(fields: [batchId], references: [id], onDelete: Cascade)
+  rowNumber    Int
+  columnName   String?
+  errorType    String   // "Duplicate", "Missing Required", "Invalid Format"
+  errorMessage String
+  invalidValue String?
+  createdAt    DateTime @default(now())
+}
+
+model VerificationCampaign {
+  id           String   @id @default(uuid())
+  name         String
+  startDate    DateTime
+  endDate      DateTime
+  assignedTeam String   // Comma separated names
+  status       String   // "Draft", "Active", "Completed", "Cancelled"
+  officeId     String?
+  office       Office?  @relation(fields: [officeId], references: [id], onDelete: Cascade)
+  createdAt    DateTime @default(now())
+
+  verifications AssetVerification[]
+}
+
+model AssetVerification {
+  id           String   @id @default(uuid())
+  campaignId   String
+  campaign     VerificationCampaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  assetId      String
+  asset        Asset    @relation(fields: [assetId], references: [id], onDelete: Cascade)
+  verifiedBy   String
+  verifiedAt   DateTime @default(now())
+  status       String   // "Verified", "Missing", "Damaged"
+  condition    String
+  notes        String?
+  evidenceUrl  String?
+  createdAt    DateTime @default(now())
 }

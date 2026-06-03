@@ -45,10 +45,11 @@ export const LoginPage: React.FC = () => {
         {/* Brand Header */}
         <div className="text-center">
           <img className="mx-auto h-12 w-auto" src="/logo.png" alt="Plan International Logo" />
-          <h2 className="mt-6 text-3xl font-extrabold text-slate-900 tracking-tight">Sign in to PACT360</h2>
-          <p className="mt-2 text-sm text-slate-500">
-            Project Asset, Contract, & Lifecycle Tracking
+          <h2 className="mt-6 text-3xl font-extrabold text-slate-900 tracking-tight">Sign in to TOTAG PACT360</h2>
+          <p className="mt-2 text-sm text-slate-500 font-medium">
+            Project Asset and Contract Tracking 360° Management System
           </p>
+          <div className="text-xs text-brand-600 font-bold tracking-wide uppercase mt-1">Track. Manage. Comply. Deliver.</div>
         </div>
 
         {/* Error Alert */}
@@ -128,38 +129,54 @@ export const LoginPage: React.FC = () => {
           <div className="flex items-center gap-2 text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">
             <Key className="w-4 h-4" /> Demo Sandbox Profiles
           </div>
-          <div className="grid grid-cols-2 gap-2 text-xs">
+          <div className="grid grid-cols-2 gap-2 text-[10px]">
             <button
               type="button"
               onClick={() => loadDemoUser('admin@pact360.local', 'Admin@12345')}
-              className="border border-slate-200 rounded-lg p-2 text-left hover:bg-brand-50 hover:border-brand-200 transition-colors"
+              className="border border-slate-200 rounded-lg p-1.5 text-left hover:bg-brand-50 hover:border-brand-200 transition-colors"
             >
-              <div className="font-semibold text-slate-800">Super Admin</div>
-              <div className="text-slate-500">admin@pact360.local</div>
+              <div className="font-bold text-slate-800">Super Admin</div>
+              <div className="text-slate-500 truncate">admin@pact360.local</div>
+            </button>
+            <button
+              type="button"
+              onClick={() => loadDemoUser('operations@pact360.local', 'Operations@12345')}
+              className="border border-slate-200 rounded-lg p-1.5 text-left hover:bg-brand-50 hover:border-brand-200 transition-colors"
+            >
+              <div className="font-bold text-slate-800">Head of Operations</div>
+              <div className="text-slate-500 truncate">operations@pact360.local</div>
             </button>
             <button
               type="button"
               onClick={() => loadDemoUser('asset.manager@pact360.local', 'Asset@12345')}
-              className="border border-slate-200 rounded-lg p-2 text-left hover:bg-brand-50 hover:border-brand-200 transition-colors"
+              className="border border-slate-200 rounded-lg p-1.5 text-left hover:bg-brand-50 hover:border-brand-200 transition-colors"
             >
-              <div className="font-semibold text-slate-800">Asset Manager</div>
-              <div className="text-slate-500">asset.manager@pact360.local</div>
+              <div className="font-bold text-slate-800">Asset Manager</div>
+              <div className="text-slate-500 truncate">asset.manager@pact360.local</div>
             </button>
             <button
               type="button"
               onClick={() => loadDemoUser('contract.manager@pact360.local', 'Contract@12345')}
-              className="border border-slate-200 rounded-lg p-2 text-left hover:bg-brand-50 hover:border-brand-200 transition-colors"
+              className="border border-slate-200 rounded-lg p-1.5 text-left hover:bg-brand-50 hover:border-brand-200 transition-colors"
             >
-              <div className="font-semibold text-slate-800">Contract Manager</div>
-              <div className="text-slate-500">contract.manager@pact360.local</div>
+              <div className="font-bold text-slate-800">Contract Manager</div>
+              <div className="text-slate-500 truncate">contract.manager@pact360.local</div>
+            </button>
+            <button
+              type="button"
+              onClick={() => loadDemoUser('grants.manager@pact360.local', 'Grants@12345')}
+              className="border border-slate-200 rounded-lg p-1.5 text-left hover:bg-brand-50 hover:border-brand-200 transition-colors"
+            >
+              <div className="font-bold text-slate-800">Grants Manager</div>
+              <div className="text-slate-500 truncate">grants.manager@pact360.local</div>
             </button>
             <button
               type="button"
               onClick={() => loadDemoUser('auditor@pact360.local', 'Auditor@12345')}
-              className="border border-slate-200 rounded-lg p-2 text-left hover:bg-brand-50 hover:border-brand-200 transition-colors"
+              className="border border-slate-200 rounded-lg p-1.5 text-left hover:bg-brand-50 hover:border-brand-200 transition-colors"
             >
-              <div className="font-semibold text-slate-800">Auditor</div>
-              <div className="text-slate-500">auditor@pact360.local</div>
+              <div className="font-bold text-slate-800">Auditor</div>
+              <div className="text-slate-500 truncate">auditor@pact360.local</div>
             </button>
           </div>
         </div>
