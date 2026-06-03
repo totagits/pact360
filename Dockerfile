@@ -14,6 +14,9 @@ RUN npm install
 COPY server/ ./
 RUN npx prisma generate
 RUN npm run build
+# Compile database and run seeder during image build phase
+ENV DATABASE_URL="file:./dev.db"
+RUN npx prisma db push --accept-data-loss && node dist/prisma/seed.js
 
 # Production Environment
 FROM node:24-alpine
@@ -33,6 +36,5 @@ RUN npx prisma generate
 ENV NODE_ENV=production
 ENV DATABASE_URL="file:./dev.db"
 
-# Start script: run migration/push, run seed (if db is new/empty), and start the server
-# Note: seeding script will be written to check if users already exist to avoid duplicate seed failures.
-CMD ["sh", "-c", "npx prisma db push && node dist/prisma/seed.js && node dist/src/index.js"]
+# Start the server instantly (the seeded database is already bundled in the image)
+CMD ["node", "dist/src/index.js"]
