@@ -30,11 +30,8 @@ RUN npm install --only=production
 RUN npx prisma generate
 
 # Environment variables
-ENV PORT=5000
 ENV NODE_ENV=production
 ENV DATABASE_URL="file:./dev.db"
-
-EXPOSE 5000
 
 # Start script: run migration/push, run seed (if db is new/empty), and start the server
 # Note: seeding script will be written to check if users already exist to avoid duplicate seed failures.
