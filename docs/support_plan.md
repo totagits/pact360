@@ -1,6 +1,6 @@
-# TOTAG PACT360: Support Plan
+# PACT360: Support Plan
 
-This document outlines the support infrastructure, tiers, response times, and escalations for **TOTAG PACT360** at Plan International Liberia.
+This document outlines the support infrastructure, tiers, response times, and escalations for **PACT360** at Plan International Liberia.
 
 ## Support Tiers
 

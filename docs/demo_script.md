@@ -1,6 +1,6 @@
 # guided demo script
 
-This guide provides a walk-through for users testing **TOTAG PACT360** in sandbox/demonstration mode.
+This guide provides a walk-through for users testing **PACT360** in sandbox/demonstration mode.
 
 ## Step 1: Sign-In with Demo Profiles
 1. Open the login page.

@@ -1,6 +1,6 @@
 # User Acceptance Testing (UAT) Script
 
-This document contains testing scripts for key features of TOTAG PACT360.
+This document contains testing scripts for key features of PACT360.
 
 ## Test Case 1: Dynamic Rebranding
 - **Action**: Go to System Configurations settings tab. Change app name to "Plan Liberia PACT" and theme color to `#dc2626` (Red). Click Save.

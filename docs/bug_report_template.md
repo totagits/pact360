@@ -1,6 +1,6 @@
 # Bug Report Template
 
-Please fill in the following information to report an issue in **TOTAG PACT360**.
+Please fill in the following information to report an issue in **PACT360**.
 
 ---
 

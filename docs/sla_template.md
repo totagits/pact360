@@ -2,12 +2,12 @@
 
 **Document Reference**: SLA-PACT360-PLAN-LBR  
 **Client**: Plan International Liberia  
-**Service Provider**: TOTAG Technical Solutions  
+**Service Provider**: PACT360 Technical Solutions  
 
 ---
 
 ## 1. Scope of Agreement
-This agreement covers support, maintenance, and hosting availability for the **TOTAG PACT360** asset management application.
+This agreement covers support, maintenance, and hosting availability for the **PACT360** asset management application.
 
 ## 2. Service Availability Target
 - **Uptime Metric**: Monthly availability of 99.9%.

@@ -1,6 +1,6 @@
 # Deployment Guide
 
-This document maps out deployment instructions for packaging and building **TOTAG PACT360** containers.
+This document maps out deployment instructions for packaging and building **PACT360** containers.
 
 ## 1. Prerequisites
 - Docker installed
@@ -9,7 +9,7 @@ This document maps out deployment instructions for packaging and building **TOTA
 
 ## 2. Local Container Build
 ```bash
-docker build -t totag-pact360:latest .
+docker build -t pact360:latest .
 ```
 
 ## 3. Google Cloud Run Deployment

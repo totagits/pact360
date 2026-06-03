@@ -440,7 +440,7 @@ model SystemSetting {
   maintenanceReminderDays    Int      @default(7)
   contractExpiryReminderDays Int      @default(30)
   warrantyExpiryReminderDays Int      @default(30)
-  systemName                 String   @default("TOTAG PACT360")
+  systemName                 String   @default("PACT360")
   systemTagline              String   @default("Track. Manage. Comply. Deliver.")
   themeColor                 String   @default("#0284c7")
 }

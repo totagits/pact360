@@ -1,6 +1,6 @@
 # Security Incident Response Guide
 
-This document describes standard operating procedures for identifying, mitigating, and responding to cyber incidents inside **TOTAG PACT360**.
+This document describes standard operating procedures for identifying, mitigating, and responding to cyber incidents inside **PACT360**.
 
 ## 1. Identification
 - **Indications**: High volume of failed login audits, unauthorized privilege escalation attempts logged in `AuditLog` table.

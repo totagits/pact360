@@ -49,7 +49,7 @@ async function main() {
       maintenanceReminderDays: 7,
       contractExpiryReminderDays: 30,
       warrantyExpiryReminderDays: 30,
-      systemName: 'TOTAG PACT360',
+      systemName: 'PACT360',
       systemTagline: 'Track. Manage. Comply. Deliver.',
       themeColor: '#0284c7',
     },
@@ -184,24 +184,25 @@ async function main() {
 
   // 7. Users
   const salt = await bcrypt.genSalt(10);
-  const adminPasswordHash = await bcrypt.hash('Admin@12345', salt);
-  const operationsPasswordHash = await bcrypt.hash('Operations@12345', salt);
-  const assetPasswordHash = await bcrypt.hash('Asset@12345', salt);
-  const contractPasswordHash = await bcrypt.hash('Contract@12345', salt);
-  const projectPasswordHash = await bcrypt.hash('Project@12345', salt);
-  const grantsPasswordHash = await bcrypt.hash('Grants@12345', salt);
-  const maintenancePasswordHash = await bcrypt.hash('Maintenance@12345', salt);
-  const auditorPasswordHash = await bcrypt.hash('Auditor@12345', salt);
+  const createHash = (pwd: string) => bcrypt.hashSync(pwd, salt);
 
   const usersData = [
-    { email: 'admin@pact360.local', passwordHash: adminPasswordHash, firstName: 'Super', lastName: 'Admin', status: 'Active', roleName: 'Super Admin', officeCode: 'MCO', departmentCode: 'OPS' },
-    { email: 'operations@pact360.local', passwordHash: operationsPasswordHash, firstName: 'Head of', lastName: 'Operations', status: 'Active', roleName: 'Head of Operations', officeCode: 'MCO', departmentCode: 'OPS' },
-    { email: 'asset.manager@pact360.local', passwordHash: assetPasswordHash, firstName: 'Asset', lastName: 'Manager', status: 'Active', roleName: 'Asset Manager', officeCode: 'MCO', departmentCode: 'LOG' },
-    { email: 'contract.manager@pact360.local', passwordHash: contractPasswordHash, firstName: 'Contract', lastName: 'Manager', status: 'Active', roleName: 'Contract Manager', officeCode: 'MCO', departmentCode: 'LOG' },
-    { email: 'project.manager@pact360.local', passwordHash: projectPasswordHash, firstName: 'Project', lastName: 'Manager', status: 'Active', roleName: 'Project Manager', officeCode: 'NFO', departmentCode: 'PROG' },
-    { email: 'grants.manager@pact360.local', passwordHash: grantsPasswordHash, firstName: 'Grants', lastName: 'Manager', status: 'Active', roleName: 'Grants Manager', officeCode: 'MCO', departmentCode: 'FIN' },
-    { email: 'maintenance@pact360.local', passwordHash: maintenancePasswordHash, firstName: 'Maintenance', lastName: 'Officer', status: 'Active', roleName: 'Maintenance Officer', officeCode: 'MCO', departmentCode: 'LOG' },
-    { email: 'auditor@pact360.local', passwordHash: auditorPasswordHash, firstName: 'Compliance', lastName: 'Auditor', status: 'Active', roleName: 'Auditor / Compliance Officer', officeCode: 'MCO', departmentCode: 'FIN' },
+    { email: 'admin@pact360.local', passwordHash: createHash('Admin@12345'), firstName: 'Super', lastName: 'Admin', status: 'Active', roleName: 'Super Admin', officeCode: 'MCO', departmentCode: 'OPS' },
+    { email: 'sys.admin@pact360.local', passwordHash: createHash('Admin@12345'), firstName: 'System', lastName: 'Administrator', status: 'Active', roleName: 'System Administrator', officeCode: 'MCO', departmentCode: 'OPS' },
+    { email: 'country.director@pact360.local', passwordHash: createHash('Director@12345'), firstName: 'Country', lastName: 'Director', status: 'Active', roleName: 'Country Director / Executive Viewer', officeCode: 'MCO', departmentCode: 'OPS' },
+    { email: 'operations.head@pact360.local', passwordHash: createHash('Admin@12345'), firstName: 'Head of', lastName: 'Operations', status: 'Active', roleName: 'Head of Operations', officeCode: 'MCO', departmentCode: 'OPS' },
+    { email: 'procurement.manager@pact360.local', passwordHash: createHash('Procurement@12345'), firstName: 'Procurement', lastName: 'Manager', status: 'Active', roleName: 'Procurement Manager', officeCode: 'MCO', departmentCode: 'LOG' },
+    { email: 'asset.manager@pact360.local', passwordHash: createHash('Asset@12345'), firstName: 'Asset', lastName: 'Manager', status: 'Active', roleName: 'Asset Manager', officeCode: 'MCO', departmentCode: 'LOG' },
+    { email: 'logistics.officer@pact360.local', passwordHash: createHash('Logistics@12345'), firstName: 'Logistics', lastName: 'Officer', status: 'Active', roleName: 'Logistics Officer', officeCode: 'MCO', departmentCode: 'LOG' },
+    { email: 'finance.manager@pact360.local', passwordHash: createHash('Finance@12345'), firstName: 'Finance', lastName: 'Manager', status: 'Active', roleName: 'Finance Manager', officeCode: 'MCO', departmentCode: 'FIN' },
+    { email: 'grants.manager@pact360.local', passwordHash: createHash('Grants@12345'), firstName: 'Grants', lastName: 'Manager', status: 'Active', roleName: 'Grants Manager', officeCode: 'MCO', departmentCode: 'FIN' },
+    { email: 'project.manager@pact360.local', passwordHash: createHash('Project@12345'), firstName: 'Project', lastName: 'Manager', status: 'Active', roleName: 'Project Manager', officeCode: 'NFO', departmentCode: 'PROG' },
+    { email: 'contract.manager@pact360.local', passwordHash: createHash('Contract@12345'), firstName: 'Contract', lastName: 'Manager', status: 'Active', roleName: 'Contract Manager', officeCode: 'MCO', departmentCode: 'LOG' },
+    { email: 'maintenance.officer@pact360.local', passwordHash: createHash('Maintenance@12345'), firstName: 'Maintenance', lastName: 'Officer', status: 'Active', roleName: 'Maintenance Officer', officeCode: 'MCO', departmentCode: 'LOG' },
+    { email: 'department.head@pact360.local', passwordHash: createHash('Dept@12345'), firstName: 'Department', lastName: 'Head', status: 'Active', roleName: 'Department Head', officeCode: 'MCO', departmentCode: 'OPS' },
+    { email: 'field.user@pact360.local', passwordHash: createHash('Field@12345'), firstName: 'Field Office', lastName: 'User', status: 'Active', roleName: 'Field Office User', officeCode: 'LFO', departmentCode: 'PROG' },
+    { email: 'auditor@pact360.local', passwordHash: createHash('Auditor@12345'), firstName: 'Compliance', lastName: 'Auditor', status: 'Active', roleName: 'Auditor / Compliance Officer', officeCode: 'MCO', departmentCode: 'FIN' },
+    { email: 'viewer@pact360.local', passwordHash: createHash('Viewer@12345'), firstName: 'Read-Only', lastName: 'Viewer', status: 'Active', roleName: 'Read-Only Viewer', officeCode: 'MCO', departmentCode: 'PROG' },
   ];
 
   const usersMap: Record<string, any> = {};
@@ -532,7 +533,7 @@ async function main() {
         sourceOfficeId: sourceOff.id,
         destOfficeId: destOff.id,
         requestedBy: 'asset.manager@pact360.local',
-        approvedBy: i % 3 === 0 ? 'operations@pact360.local' : null,
+        approvedBy: i % 3 === 0 ? 'operations.head@pact360.local' : null,
         transferDate: new Date(),
         status: i % 3 === 0 ? 'Approved' : 'Pending',
         notes: 'Asset relocation for new field staff.',
@@ -568,7 +569,7 @@ async function main() {
         type: i % 4 === 0 ? 'Corrective' : 'Preventive',
         description: `Routine work order no. WO-00${i} for logistics compliance.`,
         vendorId: vendor.id,
-        assignedOfficerId: 'maintenance@pact360.local',
+        assignedOfficerId: 'maintenance.officer@pact360.local',
         priority: i % 3 === 0 ? 'High' : 'Medium',
         status,
         cost: 150.00 + (i * 20),

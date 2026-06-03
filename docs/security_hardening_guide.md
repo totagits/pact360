@@ -1,6 +1,6 @@
 # Security Hardening Guide
 
-This document maps out security best practices for deployments of **TOTAG PACT360**.
+This document maps out security best practices for deployments of **PACT360**.
 
 ## 1. Network Constraints
 - Host Cloud Run revisions behind a Cloud Armor WAF.

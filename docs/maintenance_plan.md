@@ -1,6 +1,6 @@
-# TOTAG PACT360: System Maintenance Plan
+# PACT360: System Maintenance Plan
 
-This document details the scheduling, procedures, and responsibilities for routine maintenance of the **TOTAG PACT360** application.
+This document details the scheduling, procedures, and responsibilities for routine maintenance of the **PACT360** application.
 
 ## Maintenance Schedule
 

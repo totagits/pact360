@@ -1,6 +1,6 @@
-# TOTAG PACT360: Backup and Recovery Guide
+# PACT360: Backup and Recovery Guide
 
-This document describes the backup protocols and disaster recovery mechanisms for **TOTAG PACT360** production deployment.
+This document describes the backup protocols and disaster recovery mechanisms for **PACT360** production deployment.
 
 ## Backup Process
 

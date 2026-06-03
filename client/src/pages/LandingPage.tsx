@@ -45,7 +45,7 @@ export const LandingPage: React.FC = () => {
         <div className="flex items-center gap-3">
           <img src="/logo.png" alt="Plan International Logo" className="h-10 w-auto" />
           <div className="h-6 w-[1px] bg-slate-300"></div>
-          <span className="text-xl font-bold tracking-tight text-brand-800">TOTAG PACT<span className="text-brand-500">360</span></span>
+          <span className="text-xl font-bold tracking-tight text-brand-800">PACT<span className="text-brand-500">360</span></span>
         </div>
         <Link 
           to="/login" 
@@ -63,7 +63,7 @@ export const LandingPage: React.FC = () => {
             <Shield className="w-4 h-4" /> Track. Manage. Comply. Deliver.
           </div>
           <h1 className="text-4xl md:text-5xl font-extrabold text-slate-900 tracking-tight leading-tight">
-            TOTAG PACT360 – Project Asset and Contract Tracking 360° Management System
+            PACT360 – Project Asset and Contract Tracking 360° Management System
           </h1>
           <p className="text-lg text-slate-600 leading-relaxed max-w-xl">
             A secure, enterprise-grade web platform custom-built for **Plan International Liberia** to transition from Excel to a real-time, data-integrity-driven asset and contract lifecycle tracking platform.

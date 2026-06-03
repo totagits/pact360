@@ -45,7 +45,7 @@ export const LoginPage: React.FC = () => {
         {/* Brand Header */}
         <div className="text-center">
           <img className="mx-auto h-12 w-auto" src="/logo.png" alt="Plan International Logo" />
-          <h2 className="mt-6 text-3xl font-extrabold text-slate-900 tracking-tight">Sign in to TOTAG PACT360</h2>
+          <h2 className="mt-6 text-3xl font-extrabold text-slate-900 tracking-tight">Sign in to PACT360</h2>
           <p className="mt-2 text-sm text-slate-500 font-medium">
             Project Asset and Contract Tracking 360° Management System
           </p>
@@ -127,57 +127,37 @@ export const LoginPage: React.FC = () => {
         {/* Demo Credentials Quick-click Panel */}
         <div className="pt-6 border-t border-slate-200">
           <div className="flex items-center gap-2 text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">
-            <Key className="w-4 h-4" /> Demo Sandbox Profiles
+            <Key className="w-4 h-4" /> Demo Sandbox Profiles (Click to Load)
           </div>
-          <div className="grid grid-cols-2 gap-2 text-[10px]">
-            <button
-              type="button"
-              onClick={() => loadDemoUser('admin@pact360.local', 'Admin@12345')}
-              className="border border-slate-200 rounded-lg p-1.5 text-left hover:bg-brand-50 hover:border-brand-200 transition-colors"
-            >
-              <div className="font-bold text-slate-800">Super Admin</div>
-              <div className="text-slate-500 truncate">admin@pact360.local</div>
-            </button>
-            <button
-              type="button"
-              onClick={() => loadDemoUser('operations@pact360.local', 'Operations@12345')}
-              className="border border-slate-200 rounded-lg p-1.5 text-left hover:bg-brand-50 hover:border-brand-200 transition-colors"
-            >
-              <div className="font-bold text-slate-800">Head of Operations</div>
-              <div className="text-slate-500 truncate">operations@pact360.local</div>
-            </button>
-            <button
-              type="button"
-              onClick={() => loadDemoUser('asset.manager@pact360.local', 'Asset@12345')}
-              className="border border-slate-200 rounded-lg p-1.5 text-left hover:bg-brand-50 hover:border-brand-200 transition-colors"
-            >
-              <div className="font-bold text-slate-800">Asset Manager</div>
-              <div className="text-slate-500 truncate">asset.manager@pact360.local</div>
-            </button>
-            <button
-              type="button"
-              onClick={() => loadDemoUser('contract.manager@pact360.local', 'Contract@12345')}
-              className="border border-slate-200 rounded-lg p-1.5 text-left hover:bg-brand-50 hover:border-brand-200 transition-colors"
-            >
-              <div className="font-bold text-slate-800">Contract Manager</div>
-              <div className="text-slate-500 truncate">contract.manager@pact360.local</div>
-            </button>
-            <button
-              type="button"
-              onClick={() => loadDemoUser('grants.manager@pact360.local', 'Grants@12345')}
-              className="border border-slate-200 rounded-lg p-1.5 text-left hover:bg-brand-50 hover:border-brand-200 transition-colors"
-            >
-              <div className="font-bold text-slate-800">Grants Manager</div>
-              <div className="text-slate-500 truncate">grants.manager@pact360.local</div>
-            </button>
-            <button
-              type="button"
-              onClick={() => loadDemoUser('auditor@pact360.local', 'Auditor@12345')}
-              className="border border-slate-200 rounded-lg p-1.5 text-left hover:bg-brand-50 hover:border-brand-200 transition-colors"
-            >
-              <div className="font-bold text-slate-800">Auditor</div>
-              <div className="text-slate-500 truncate">auditor@pact360.local</div>
-            </button>
+          <div className="max-h-48 overflow-y-auto grid grid-cols-2 gap-2 text-[9px] pr-1 scrollbar-thin">
+            {[
+              { role: 'Super Admin', email: 'admin@pact360.local', pass: 'Admin@12345' },
+              { role: 'System Administrator', email: 'sys.admin@pact360.local', pass: 'Admin@12345' },
+              { role: 'Country Director / Executive', email: 'country.director@pact360.local', pass: 'Director@12345' },
+              { role: 'Head of Operations', email: 'operations.head@pact360.local', pass: 'Admin@12345' },
+              { role: 'Procurement Manager', email: 'procurement.manager@pact360.local', pass: 'Procurement@12345' },
+              { role: 'Asset Manager', email: 'asset.manager@pact360.local', pass: 'Asset@12345' },
+              { role: 'Logistics Officer', email: 'logistics.officer@pact360.local', pass: 'Logistics@12345' },
+              { role: 'Finance Manager', email: 'finance.manager@pact360.local', pass: 'Finance@12345' },
+              { role: 'Grants Manager', email: 'grants.manager@pact360.local', pass: 'Grants@12345' },
+              { role: 'Project Manager', email: 'project.manager@pact360.local', pass: 'Project@12345' },
+              { role: 'Contract Manager', email: 'contract.manager@pact360.local', pass: 'Contract@12345' },
+              { role: 'Maintenance Officer', email: 'maintenance.officer@pact360.local', pass: 'Maintenance@12345' },
+              { role: 'Department Head', email: 'department.head@pact360.local', pass: 'Dept@12345' },
+              { role: 'Field Office User', email: 'field.user@pact360.local', pass: 'Field@12345' },
+              { role: 'Auditor', email: 'auditor@pact360.local', pass: 'Auditor@12345' },
+              { role: 'Read-Only Viewer', email: 'viewer@pact360.local', pass: 'Viewer@12345' }
+            ].map((u) => (
+              <button
+                key={u.email}
+                type="button"
+                onClick={() => loadDemoUser(u.email, u.pass)}
+                className="border border-slate-200 rounded-lg p-1.5 text-left hover:bg-brand-50 hover:border-brand-200 transition-colors"
+              >
+                <div className="font-bold text-slate-800 truncate">{u.role}</div>
+                <div className="text-slate-500 truncate">{u.email}</div>
+              </button>
+            ))}
           </div>
         </div>
 

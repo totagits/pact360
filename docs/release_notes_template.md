@@ -1,4 +1,4 @@
-# TOTAG PACT360: Release Notes
+# PACT360: Release Notes
 
 **Version**: v1.0.0-LBR-ITT-044  
 **Release Date**: June 3, 2026  

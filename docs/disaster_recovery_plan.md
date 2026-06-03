@@ -1,6 +1,6 @@
 # Disaster Recovery Plan
 
-This document outlines the business continuity and disaster recovery (DR) protocols for **TOTAG PACT360**.
+This document outlines the business continuity and disaster recovery (DR) protocols for **PACT360**.
 
 ## Recovery Time Objective (RTO)
 Maximum acceptable duration of downtime: **12 hours**.

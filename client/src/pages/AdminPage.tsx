@@ -60,7 +60,7 @@ export const AdminPage: React.FC = () => {
         contractCodePrefix: sRes.data.contractCodePrefix,
         maintenanceReminderDays: sRes.data.maintenanceReminderDays,
         contractExpiryReminderDays: sRes.data.contractExpiryReminderDays,
-        systemName: sRes.data.systemName || 'TOTAG PACT360',
+        systemName: sRes.data.systemName || 'PACT360',
         systemTagline: sRes.data.systemTagline || 'Track. Manage. Comply. Deliver.',
         themeColor: sRes.data.themeColor || '#0284c7'
       });
@@ -405,7 +405,7 @@ export const AdminPage: React.FC = () => {
             </div>
             <div className="col-span-2">
               <label className="block text-xs font-semibold text-slate-500 mb-1">System Name (Dynamic White-Labeling)</label>
-              <input type="text" value={settingsForm.systemName} onChange={(e) => setSettingsForm({ ...settingsForm, systemName: e.target.value })} className="block w-full border rounded-lg p-2.5 text-sm" placeholder="e.g. TOTAG PACT360" required />
+              <input type="text" value={settingsForm.systemName} onChange={(e) => setSettingsForm({ ...settingsForm, systemName: e.target.value })} className="block w-full border rounded-lg p-2.5 text-sm" placeholder="e.g. PACT360" required />
             </div>
             <div className="col-span-2">
               <label className="block text-xs font-semibold text-slate-500 mb-1">System Tagline</label>

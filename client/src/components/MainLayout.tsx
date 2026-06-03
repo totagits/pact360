@@ -108,7 +108,7 @@ export const MainLayout: React.FC<{ children: React.ReactNode }> = ({ children }
           <Link to="/dashboard" className="flex items-center gap-3">
             <img src={settings?.logoUrl || '/logo.png'} alt="Branding Logo" className="h-8 w-auto bg-white/10 p-0.5 rounded" />
             <span className="text-xl font-bold tracking-tight text-white">
-              {settings?.systemName || 'TOTAG PACT360'}
+              {settings?.systemName || 'PACT360'}
             </span>
           </Link>
         </div>
@@ -280,7 +280,7 @@ export const MainLayout: React.FC<{ children: React.ReactNode }> = ({ children }
             </button>
             <div className="flex items-center gap-3 mb-8">
               <img src={settings?.logoUrl || '/logo.png'} alt="Branding Logo" className="h-8 w-auto" />
-              <span className="text-lg font-bold text-white">{settings?.systemName || 'TOTAG PACT360'}</span>
+              <span className="text-lg font-bold text-white">{settings?.systemName || 'PACT360'}</span>
             </div>
             <nav className="flex-1 space-y-1">
               {menuItems.map((item, idx) => {
